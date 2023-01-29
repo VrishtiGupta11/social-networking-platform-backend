@@ -59,5 +59,7 @@ public interface UserRepo extends JpaRepository<User, Long>{
 	@Query(value = "select u.userid, u.firstName, u.lastName, u.email, u.city from users u where u.userid in (select ui.userid from userInterest ui where ui.interestid = :interestid)", nativeQuery = true)
 	List<Map<String, Object>> getUsersOfInterest(@Param("interestid") long interestid);
 	
+	@Query(value = "select u.password from users u where u.email = :email", nativeQuery = true)
+	Map<String, String> getUserByEmail(@Param("email") String email);
 }
 
