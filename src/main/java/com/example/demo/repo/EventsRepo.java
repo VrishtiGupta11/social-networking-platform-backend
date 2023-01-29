@@ -23,4 +23,7 @@ public interface EventsRepo extends JpaRepository<Events, Long>{
 	
 	@Query(value = "select u.userid, u.firstName, u.lastName, u.email, u.city from users u where u.userid in (select ue.userid from userevents ue where ue.eventid = :eventid)", nativeQuery = true)
 	List<Map<String, Object>> getUsersOfEvent(@Param("eventid") long eventid);
+	
+	@Query(value = "select ue.userid, ue.eventid from userEvents ue where ue.userid = :userid", nativeQuery = true)
+	List<Map<String, Long>> getEventsOfUser(@Param("userid") long userid);
 }

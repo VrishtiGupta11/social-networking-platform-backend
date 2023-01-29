@@ -130,8 +130,9 @@ public class EventController {
 	}
 	
 	// Get events happening for a particular interest
-	@GetMapping("/api/user/{userid}/event")
-	public ResponseEntity<List<Map<String, Object>>> getEventsBasedOnInterest(@PathVariable("userid") long userid) throws JsonMappingException, JsonProcessingException {
+	
+	@GetMapping("/api/user/{userid}/interest/event")
+	public List<Map<String, Object>> getEventsBasedOnInterest(@PathVariable("userid") long userid) throws JsonMappingException, JsonProcessingException {
 		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
 		if(userList.size() == 0) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User id doesn't exist");
@@ -165,7 +166,7 @@ public class EventController {
 			}
 		}
 		System.out.println(eventsBasedOnInterest);
-		return new ResponseEntity<List<Map<String, Object>>>(eventsBasedOnInterest, HttpStatus.OK);
+		return (eventsBasedOnInterest);
 	}
 	
 	
@@ -191,6 +192,7 @@ public class EventController {
 	}
 	
 	// Get Venue by venueid
+	
 	@GetMapping("/api/venue/{venueid}")
 	public Map<String, Object> getVenueById(@PathVariable("venueid") String venueid) {
 		String theUrl = "https://www.eventbriteapi.com/v3/venues/"+venueid+"/";
@@ -216,6 +218,7 @@ public class EventController {
 	@GetMapping("/api/user/{userid}/city/event") 
 	public ResponseEntity<List<Map<String, Object>>> getEventsBasedOnCity(@PathVariable("userid") long userid) throws JsonMappingException, JsonProcessingException {
 		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
+		
 		ObjectMapper objectMapper = new ObjectMapper(); 
 		String city = objectMapper.convertValue(userList.get(0).get("city"), String.class);
 		
@@ -248,6 +251,52 @@ public class EventController {
 		List<Map<String, Object>> usersOfEvent = eventsRepo.getUsersOfEvent(eventid);
 		return new ResponseEntity<List<Map<String, Object>>>(usersOfEvent, HttpStatus.OK);
 	}
+	
+	// Get Registered Events
+	
+	@GetMapping("/api/user/{userid}/event")
+	public ResponseEntity<List<Object>> getRegisteredEvents(@PathVariable("userid") long userid) {
+		List<Map<String, Long>> eventsList = eventsRepo.getEventsOfUser(userid);
+		
+		List<Object> registeredEventsList = new ArrayList<>();
+		for(Map<String, Long> map : eventsList) {
+			Long eventid = map.get("eventid");
+			Object object = getEvent(eventid);
+			registeredEventsList.add(object);
+		}
+		
+		return new ResponseEntity<List<Object>>(registeredEventsList, HttpStatus.OK);
+	}
+	
+	// Get Events Based on City and Interest
+	
+	@GetMapping("/api/user/{userid}/city/interest/event")
+	public ResponseEntity<List<Map<String, Object>>> getEventsBasedOnCityAndInterest(@PathVariable("userid") long userid) throws JsonMappingException, JsonProcessingException {
+		List<Map<String, Object>> eventsBasedOnInterestList = getEventsBasedOnInterest(userid);
+		
+		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
+		
+		ObjectMapper objectMapper = new ObjectMapper(); 
+		String city = objectMapper.convertValue(userList.get(0).get("city"), String.class);
+		
+		List<Map<String, Object>> eventsListBasedOnInterestAndCity = new ArrayList<>();
+		
+		for(Map<String, Object> element : eventsBasedOnInterestList) {
+			Object venueid = element.get("venue_id");
+			String venueidString = objectMapper.convertValue(venueid, String.class);
+			
+			Map<String, Object> mp = getVenueById(venueidString);
+			Map address = objectMapper.convertValue(mp.get("address"), Map.class);
+			String cityString = objectMapper.convertValue(address.get("city"), String.class);
+			
+			if(cityString.equals(city)) {
+				eventsListBasedOnInterestAndCity.add(element);
+			}
+		}
+		
+		return new ResponseEntity<List<Map<String, Object>>>(eventsListBasedOnInterestAndCity, HttpStatus.OK); 
+	}
+
 }
 
 

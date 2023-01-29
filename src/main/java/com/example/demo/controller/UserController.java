@@ -33,7 +33,7 @@ public class UserController {
 	@Autowired
 	UserRepo userRepo;
 	
-	//	Add user ( Post)
+	//	Add user/Register user ( Post)
 	//	POST /api/user
 	
 	@PostMapping("/api/user")
@@ -67,32 +67,6 @@ public class UserController {
 	}
 	
 	
-	//	Add interest to an existing user. (Put)
-	//	PUT /api/user/:id/interest
-	
-	@PutMapping("/api/user/{userid}/interest")
-	public ResponseEntity<Map<String, String>> addInterest(@PathVariable("userid") long userid, @RequestBody Interest interest) {
-		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
-		if(userList.size() == 0) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User id doesn't exist");
-		}
-		
-		List<Map<String, Object>> interestList = userRepo.getInterestById(interest.getInterestId());
-		if(interestList.size() == 0) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Interest id doesn't exist");
-		}
-		
-		Map<String, Long> mp = userRepo.userInterestExists(userid, interest.getInterestId());
-		if(mp.size() == 0) {
-			userRepo.updateInterest(interest.getInterestId(), userid);
-		}
-		
-		return new ResponseEntity<Map<String,String>>(
-				new HashMap<String, String>(){{
-					put("message", "Interest Inserted Successfully");
-				}}, HttpStatus.OK);
-	}
-	
 	//	Get user by user id and display user information. (Get)
 	
 	@GetMapping("/api/user/{userid}")
@@ -113,39 +87,6 @@ public class UserController {
 		return responseMap;
 	}
 	
-	//	Get interests of a particular user. (Get)
-	
-	@GetMapping("/api/user/{userid}/interest")
-	public List<Map<String, Object>> getInterest(@PathVariable("userid") long userid) {
-		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
-		if(userList.size() == 0) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User id doesn't exist");
-		}
-		
-		List<Map<String, Object>> interestList = userRepo.getInterestsOfUser(userid);
-		return interestList;
-	}
-	
-	//	Remove the interest of the user. (Put)
-	
-	@PutMapping("/api/user/{userid}/interest/{interestid}")
-	public ResponseEntity<Map<String, String>> deleteInterest(@PathVariable("userid") long userid, @PathVariable("interestid") long interestid) {
-		List<Map<String, Object>> userList = userRepo.getUsersById(userid);
-		if(userList.size() == 0) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User id doesn't exist");
-		}
-		
-		List<Map<String, Object>> interestList = userRepo.getInterestById(interestid);
-		if(interestList.size() == 0) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Interest id doesn't exist");
-		}
-		userRepo.deleteInterestOfUser(userid, interestid);
-		return new ResponseEntity<Map<String,String>>(
-				new HashMap<String, String>(){{
-					put("message", "Interest Removed Successfully");
-				}}, HttpStatus.OK);
-	}
-	
 	//	Delete a user ( Delete)
 	
 	@DeleteMapping("/api/user/{userid}")
@@ -162,5 +103,10 @@ public class UserController {
 				}}, HttpStatus.OK);
 	}
 	
-	
+	// Get Users of particular interest
+	@GetMapping("/api/interest/{interestid}/user")
+	public ResponseEntity<List<Map<String, Object>>> getUserOfParticularInterest(@PathVariable("interestid") long interestid) {
+		List<Map<String, Object>> usersOfInterest = userRepo.getUsersOfInterest(interestid);
+		return new ResponseEntity<List<Map<String, Object>>>(usersOfInterest, HttpStatus.OK);
+	}
 }

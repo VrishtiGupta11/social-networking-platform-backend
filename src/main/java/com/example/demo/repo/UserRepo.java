@@ -40,6 +40,24 @@ public interface UserRepo extends JpaRepository<User, Long>{
 	@Query(value = "select ui.userid, ui.interestid from userInterest ui where ui.userid = :userid and ui.interestid = :interestid", nativeQuery = true)
 	Map<String, Long> userInterestExists(@Param("userid") long userid, @Param("interestid") long interestid);
 	
+	@Modifying
+	@Transactional
+	@Query(value = "insert into userFriends(friendid, userid) values(:friendid, :userid)", nativeQuery = true)
+	void addUserFriends(@Param("friendid") long friendid, @Param("userid") long userid);
+	
+	@Query(value = "select uf.userid, uf.friendid from userFriends uf where uf.userid = :userid and uf.friendid = :friendid", nativeQuery = true)
+	Map<String, Long> userFriendExists(@Param("userid") long userid, @Param("friendid") long friendid);
+	
+	@Query(value = "select u.userid, u.firstName, u.lastName, u.email, u.city from users u where u.userid in (select uf.friendid from userFriends uf where uf.userid = :userid)", nativeQuery = true)
+	List<Map<String, Object>> getFriendsOfUser(@Param("userid") long userid);
+	
+	@Modifying
+	@Transactional
+	@Query(value = "delete from userFriends uf where uf.userid = :userid and uf.friendid = :friendid", nativeQuery = true)
+	void deleteFriendOfUser(@Param("userid") long userid, @Param("friendid") long friendid);
+	
+	@Query(value = "select u.userid, u.firstName, u.lastName, u.email, u.city from users u where u.userid in (select ui.userid from userInterest ui where ui.interestid = :interestid)", nativeQuery = true)
+	List<Map<String, Object>> getUsersOfInterest(@Param("interestid") long interestid);
 	
 }
 
